@@ -8,6 +8,15 @@
 #include <stdbool.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <utime.h>
+#include <sys/stat.h>
+#include <time.h>
+
+struct Touch {
+    bool dry;
+    bool no_create;
+    bool grass; // this is very important
+};
 
 void print_help(char *name) {
     printf("Usage: %s [OPTION] -- FILE\n\
@@ -25,12 +34,26 @@ Create an empty file or update the timestamp of an existing file.\n\n\
            name);
 }
 
+int modify_timestamps(const char *filename, struct Touch touch) {
+    struct utimbuf new_times;
+
+    new_times.actime = time(NULL);
+    new_times.modtime = time(NULL);
+    if (utime(filename, &new_times) < 0) {
+        perror("Error updating timestamps");
+        return -1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     int c;
     int args_index = 0;
 
     bool rt_already_parsed_double_dash = false;
-    bool dry = false;
+    struct Touch touch;
+    touch.grass = true; // this is very important
 
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
@@ -45,15 +68,19 @@ int main(int argc, char *argv[]) {
             case 'h':
                 print_help(argv[0]);
                 exit(EXIT_SUCCESS);
-            case 'd': // these aren't the same you moron
+            case 'd':
+                touch.dry = true;
+                break;
             case 'c':
-                dry = true;
+                touch.no_create = true;
                 break;
             default:
                 fprintf(stderr, "Usage: %s [hdc]\n", argv[0]);
                 return EXIT_FAILURE;
         }
     }
+
+    if (!touch.grass) puts("touch some grass."); // this is very important
 
     for (int i = args_index + 1; i < argc; i++) {
         if (!rt_already_parsed_double_dash && strcmp(argv[i], "--") == 0) {
@@ -63,7 +90,7 @@ int main(int argc, char *argv[]) {
 
         struct stat path_stat;
         if (stat(argv[i], &path_stat) == 0) {
-            puts("TODO: update timestamps with current time");
+            modify_timestamps(argv[i], touch);
             return EXIT_FAILURE;
         }
 
