@@ -37,6 +37,10 @@ Create an empty file or update the timestamp of an existing file.\n\n\
 int modify_timestamps(const char *filename, struct Touch touch) {
     struct utimbuf new_times;
 
+    if (touch.dry) {
+        printf("Would modify timestamp to latest for file: '%s'\n", filename);
+        return 0;
+    }
     new_times.actime = time(NULL);
     new_times.modtime = time(NULL);
     if (utime(filename, &new_times) < 0) {
@@ -94,6 +98,13 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
 
+        if (touch.dry) {
+            printf("Would create file '%s'\n", argv[i]);
+            return 0;
+        } else if (touch.no_create) {
+            printf("Not creating file '%s'\n", argv[i]);
+            return 0;
+        }
         FILE *fptr;
         fptr = fopen(argv[i], "w");
         if (!fptr) {
