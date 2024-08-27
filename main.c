@@ -7,7 +7,6 @@
 #include <getopt.h>
 #include <stdbool.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <utime.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -122,3 +121,4 @@ int main(int argc, char *argv[]) {
 
     return EXIT_SUCCESS;
 }
+
