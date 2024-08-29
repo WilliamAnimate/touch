@@ -50,11 +50,28 @@ int modify_timestamps(const char *filename, struct Touch touch) {
     return 0;
 }
 
+int modify_timestamp_from_reference(const char *newfile, const char *ref, struct Touch touch) {
+    struct stat source_stat;
+    if (stat(ref, &source_stat) != 0) {
+        perror("Cannot get reference file timestamps");
+        return -1;
+    }
+
+    struct utimbuf new_times = {source_stat.st_atime, source_stat.st_mtime};
+    if (utime(newfile, &new_times) != 0) {
+        perror("Error updating target file timestamps");
+        return -1;
+    }
+
+    return 0;
+}
+
 int main(int argc, char *argv[]) {
     int c;
     int args_index = 0;
 
     bool rt_already_parsed_double_dash = false;
+    char *reference_file_to_modify = NULL;
     struct Touch touch;
     touch.grass = true; // this is very important
 
@@ -63,9 +80,10 @@ int main(int argc, char *argv[]) {
         {"dry", no_argument, 0, 'd'},
         {"dry-run", no_argument, 0, 'd'},
         {"no-create", no_argument, 0, 'c'},
+        {"reference", no_argument, 0, 'r'},
     };
 
-    while ((c = getopt_long(argc, argv, "hddc", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "hddr:c", long_options, NULL)) != -1) {
         args_index++;
         switch (c) {
             case 'h':
@@ -76,6 +94,10 @@ int main(int argc, char *argv[]) {
                 break;
             case 'c':
                 touch.no_create = true;
+                break;
+            case 'r':
+                // SAFETY: getopt won't call this code if argument isn't suppied; this is marked as a must-have-parameter, therefore, args_index + 2 will always exist.
+                reference_file_to_modify = argv[args_index + 2];
                 break;
             default:
                 fprintf(stderr, "Usage: %s [hdc]\n", argv[0]);
@@ -93,8 +115,14 @@ int main(int argc, char *argv[]) {
 
         struct stat path_stat;
         if (stat(argv[i], &path_stat) == 0) {
-            modify_timestamps(argv[i], touch);
-            return EXIT_FAILURE;
+            int ret;
+            if (reference_file_to_modify) {
+                ret = modify_timestamp_from_reference(reference_file_to_modify, argv[i], touch);
+            } else {
+                ret = modify_timestamps(argv[i], touch);
+            }
+            printf("%i\n", ret);
+            return ret;
         }
 
         if (touch.dry) {
