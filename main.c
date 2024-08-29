@@ -136,13 +136,14 @@ int main(int argc, char *argv[]) {
         fptr = fopen(argv[i], "w");
         if (!fptr) {
             // string concatnation better on stack (stack overflow impending)
-            // i can prolly just not append newline to printf and then call perror with null
-            // scary memory management garbage incoming; seasoned c programmers might flame me for this
+            // scary memory management mess; hallilo please dont murder me im trying my best >~<
             char error_msg[] = "Cannot touch '";
             char error_msg_end[] = "'";
-            strcat(error_msg, argv[i]);
-            strcat(error_msg, error_msg_end);
-            perror(error_msg);
+            char concat[sizeof(error_msg) + sizeof(argv[i]) + sizeof(error_msg_end)];
+            strcpy(concat, error_msg);
+            strcat(concat, argv[i]);
+            strcat(concat, error_msg_end);
+            perror(concat);
             return EXIT_FAILURE;
         }
     }
