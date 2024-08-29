@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
             // scary memory management mess; hallilo please dont murder me im trying my best >~<
             char error_msg[] = "Cannot touch '";
             char error_msg_end[] = "'";
-            char concat[sizeof(error_msg) + sizeof(argv[i]) + sizeof(error_msg_end)];
+            char concat[strlen(error_msg) + strlen(argv[i]) + strlen(error_msg_end) + 1];
             strcpy(concat, error_msg);
             strcat(concat, argv[i]);
             strcat(concat, error_msg_end);
