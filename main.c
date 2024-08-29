@@ -33,33 +33,32 @@ Create an empty file or update the timestamp of an existing file.\n\n\
            name);
 }
 
-int modify_timestamps(const char *filename, struct Touch touch) {
+int modify_timestamps(const char *filename, const char *ref, struct Touch touch) {
     struct utimbuf new_times;
+    struct stat source_stat;
+
+    if (ref != NULL) {
+        if (stat(ref, &source_stat) != 0) {
+            perror("Cannot get reference file timestamps");
+            return -1;
+        }
+    }
 
     if (touch.dry) {
         printf("Would modify timestamp to latest for file: '%s'\n", filename);
         return 0;
     }
-    new_times.actime = time(NULL);
-    new_times.modtime = time(NULL);
-    if (utime(filename, &new_times) < 0) {
+
+    if (ref != NULL) {
+        new_times.actime = source_stat.st_atime;
+        new_times.modtime = source_stat.st_mtime;
+    } else {
+        new_times.actime = time(NULL);
+        new_times.modtime = time(NULL);
+    }
+
+    if (utime(filename, &new_times) != 0) {
         perror("Error updating timestamps");
-        return -1;
-    }
-
-    return 0;
-}
-
-int modify_timestamp_from_reference(const char *newfile, const char *ref, struct Touch touch) {
-    struct stat source_stat;
-    if (stat(ref, &source_stat) != 0) {
-        perror("Cannot get reference file timestamps");
-        return -1;
-    }
-
-    struct utimbuf new_times = {source_stat.st_atime, source_stat.st_mtime};
-    if (utime(newfile, &new_times) != 0) {
-        perror("Error updating target file timestamps");
         return -1;
     }
 
@@ -115,14 +114,10 @@ int main(int argc, char *argv[]) {
 
         struct stat path_stat;
         if (stat(argv[i], &path_stat) == 0) {
-            int ret;
-            if (reference_file_to_modify) {
-                ret = modify_timestamp_from_reference(reference_file_to_modify, argv[i], touch);
-            } else {
-                ret = modify_timestamps(argv[i], touch);
-            }
-            printf("%i\n", ret);
-            return ret;
+            // FIXME: reference mode breaks if we dont do this
+            return (reference_file_to_modify == NULL) ?
+                modify_timestamps(argv[i], NULL, touch) :
+                modify_timestamps(reference_file_to_modify, argv[i], touch);
         }
 
         if (touch.dry) {
