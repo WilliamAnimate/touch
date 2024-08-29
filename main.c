@@ -26,7 +26,7 @@ Create an empty file or update the timestamp of an existing file.\n\n\
   -m                           change only the modification time\n\
       --time=WORD              specify what to change:\n\
                                  access time (-a): `access`, `atime`, `use`;\n\
-                                 modification time (-m): `access`, `atime`, `mtine`\n\
+                                 modification time (-m): `access`, `atime`, `mtime`\n\
   -h, --help                   displays this screen\n\
   -v, --version                display version and exit\n\
 ",
