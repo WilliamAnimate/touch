@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'v':
                 print_version(argv[0]);
-                break;
+                exit(EXIT_SUCCESS);
             default:
                 fprintf(stderr, "Usage: %s [hdc]\n", argv[0]);
                 return EXIT_FAILURE;
