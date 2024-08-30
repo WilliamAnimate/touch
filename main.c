@@ -11,12 +11,21 @@
 #include <sys/stat.h>
 #include <time.h>
 
+#define VERSION_MAJOR 0
+#define VERSION_MINOR 1
+#define VERSION_PATCH 0
+
 struct Touch {
     bool dry;
     bool no_create;
     bool only_access;
     bool only_modify;
 };
+
+void print_version(char *name) {
+    printf("%s v%i.%i.%i\n",
+           name, VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+}
 
 void print_help(char *name) {
     printf("Usage: %s [OPTION] -- FILE\n\
@@ -93,9 +102,10 @@ int main(int argc, char *argv[]) {
         {"dry-run", no_argument, 0, 'd'},
         {"no-create", no_argument, 0, 'c'},
         {"reference", no_argument, 0, 'r'},
+        {"version", no_argument, 0, 'v'},
     };
 
-    while ((c = getopt_long(argc, argv, "hddr:cam", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "hddr:camv", long_options, NULL)) != -1) {
         args_index++;
         switch (c) {
             case 'h':
@@ -116,6 +126,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 touch.only_modify = true;
+                break;
+            case 'v':
+                print_version(argv[0]);
                 break;
             default:
                 fprintf(stderr, "Usage: %s [hdc]\n", argv[0]);
