@@ -10,6 +10,7 @@
 #include <utime.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <errno.h>
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 1
@@ -157,13 +158,7 @@ int main(int argc, char *argv[]) {
         if (!fptr) {
             // string concatnation better on stack (stack overflow impending)
             // scary memory management mess; hallilo please dont murder me im trying my best >~<
-            char error_msg[] = "Cannot touch '";
-            char error_msg_end[] = "'";
-            char concat[strlen(error_msg) + strlen(argv[i]) + strlen(error_msg_end) + 1];
-            strcpy(concat, error_msg);
-            strcat(concat, argv[i]);
-            strcat(concat, error_msg_end);
-            perror(concat);
+            fprintf(stderr, "Cannot touch '%s': %s\n", argv[i], strerror(errno));
             return EXIT_FAILURE;
         }
     }
