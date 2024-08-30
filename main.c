@@ -49,20 +49,16 @@ int modify_timestamps(const char *filename, const char *ref, struct Touch touch)
     struct stat source_stat;
     struct stat current_stat;
 
-    if (ref != NULL) {
-        if (stat(ref, &source_stat) != 0) {
-            perror("Cannot get reference file timestamps");
-            return -1;
-        }
+    if (ref != NULL && stat(ref, &source_stat) != 0) {
+        perror("Cannot get reference file timestamps");
+        return -1;
     }
 
     // if we aren't only touching one value (setting it to what it currently is)
     // then don't expend unneeded effort finding it.
-    if (touch.only_modify || touch.only_access) {
-        if (stat(filename, &current_stat) != 0) {
-            perror("Cannot get current file timestamps");
-            return -1;
-        }
+    if ((touch.only_modify || touch.only_access) && stat(filename, &current_stat) != 0) {
+        perror("Cannot get current file timestamps");
+        return -1;
     }
 
     if (touch.dry) {
