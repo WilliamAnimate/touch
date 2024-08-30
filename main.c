@@ -31,7 +31,7 @@ void print_help(char *name) {
     printf("Usage: %s [OPTION] -- FILE\n\
 Create an empty file or update the timestamp of an existing file.\n\n\
   -a                           only affect the access time\n\
-  -d, --dry, --dry-run         do not affect or create any files\n\
+  -d, --dry-run                do not affect or create any files\n\
   -c, --no-create              do not create any files\n\
   -r, --reference=FILE         use the specified file's times\n\
   -m                           only affect the modificaton time\n\
@@ -98,14 +98,13 @@ int main(int argc, char *argv[]) {
 
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
-        {"dry", no_argument, 0, 'd'},
         {"dry-run", no_argument, 0, 'd'},
         {"no-create", no_argument, 0, 'c'},
         {"reference", no_argument, 0, 'r'},
         {"version", no_argument, 0, 'v'},
     };
 
-    while ((c = getopt_long(argc, argv, "hddr:camv", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "hdr:camv", long_options, NULL)) != -1) {
         args_index++;
         switch (c) {
             case 'h':
