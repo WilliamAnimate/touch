@@ -14,7 +14,6 @@
 struct Touch {
     bool dry;
     bool no_create;
-    bool grass; // this is very important
     bool only_access;
     bool only_modify;
 };
@@ -87,7 +86,6 @@ int main(int argc, char *argv[]) {
     bool rt_already_parsed_double_dash = false;
     char *reference_file_to_modify = NULL;
     struct Touch touch;
-    touch.grass = true; // this is very important
 
     static struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
@@ -124,8 +122,6 @@ int main(int argc, char *argv[]) {
                 return EXIT_FAILURE;
         }
     }
-
-    if (!touch.grass) puts("touch some grass."); // this is very important
 
     for (int i = args_index + 1; i < argc; i++) {
         if (!rt_already_parsed_double_dash && strcmp(argv[i], "--") == 0) {
