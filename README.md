@@ -10,7 +10,7 @@ this - 6972 bytes
 
 ## build
 
-`tcc main.c -Oz -flto -fwhole-program -ffunction-sections -s`
+`tcc touch.c -Oz -flto -fwhole-program -ffunction-sections -s`
 
 gcc also works, but will generate a binary about twice as large.
 
