@@ -15,15 +15,18 @@ struct Touch {
     bool dry;
     bool no_create;
     bool grass; // this is very important
+    bool only_access;
+    bool only_modify;
 };
 
 void print_help(char *name) {
     printf("Usage: %s [OPTION] -- FILE\n\
 Create an empty file or update the timestamp of an existing file.\n\n\
+  -a                           only affect the access time\n\
   -d, --dry, --dry-run         do not affect or create any files\n\
   -c, --no-create              do not create any files\n\
   -r, --reference=FILE         use the specified file's times\n\
-  -m                           change only the modification time\n\
+  -m                           only affect the modificaton time\n\
       --time=WORD              specify what to change:\n\
                                  access time (-a): `access`, `atime`, `use`;\n\
                                  modification time (-m): `access`, `atime`, `mtime`\n\
@@ -36,10 +39,20 @@ Create an empty file or update the timestamp of an existing file.\n\n\
 int modify_timestamps(const char *filename, const char *ref, struct Touch touch) {
     struct utimbuf new_times;
     struct stat source_stat;
+    struct stat current_stat;
 
     if (ref != NULL) {
         if (stat(ref, &source_stat) != 0) {
             perror("Cannot get reference file timestamps");
+            return -1;
+        }
+    }
+
+    // if we aren't only touching one value (setting it to what it currently is)
+    // then don't expend unneeded effort finding it.
+    if (touch.only_modify || touch.only_access) {
+        if (stat(filename, &current_stat) != 0) {
+            perror("Cannot get current file timestamps");
             return -1;
         }
     }
@@ -49,12 +62,14 @@ int modify_timestamps(const char *filename, const char *ref, struct Touch touch)
         return 0;
     }
 
+    // if the *ref var is NULL. if it is, then we're in reference mode. otherwise, we're in update mode
+    // then we check if we're only updating the modify time or access time, or both
     if (ref != NULL) {
-        new_times.actime = source_stat.st_atime;
-        new_times.modtime = source_stat.st_mtime;
+        new_times.actime = touch.only_access ? current_stat.st_atime: source_stat.st_atime;
+        new_times.modtime = touch.only_modify ? current_stat.st_mtime : source_stat.st_mtime ;
     } else {
-        new_times.actime = time(NULL);
-        new_times.modtime = time(NULL);
+        new_times.actime = touch.only_access ? current_stat.st_atime : time(NULL);
+        new_times.modtime = touch.only_modify ? current_stat.st_mtime : time(NULL);
     }
 
     if (utime(filename, &new_times) != 0) {
@@ -82,7 +97,7 @@ int main(int argc, char *argv[]) {
         {"reference", no_argument, 0, 'r'},
     };
 
-    while ((c = getopt_long(argc, argv, "hddr:c", long_options, NULL)) != -1) {
+    while ((c = getopt_long(argc, argv, "hddr:cam", long_options, NULL)) != -1) {
         args_index++;
         switch (c) {
             case 'h':
@@ -97,6 +112,12 @@ int main(int argc, char *argv[]) {
             case 'r':
                 // SAFETY: getopt won't call this code if argument isn't suppied; this is marked as a must-have-parameter, therefore, args_index + 2 will always exist.
                 reference_file_to_modify = argv[args_index + 2];
+                break;
+            case 'a':
+                touch.only_access = true;
+                break;
+            case 'm':
+                touch.only_modify = true;
                 break;
             default:
                 fprintf(stderr, "Usage: %s [hdc]\n", argv[0]);
